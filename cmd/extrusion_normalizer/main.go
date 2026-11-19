@@ -2,6 +2,7 @@ package main
 
 import (
 	"flag"
+	"fmt"
 	"log"
 	"math"
 	"os"
@@ -68,14 +69,84 @@ func main() {
 		return math.Sqrt(fillerAmount) + extraVolume
 	}
 	mesh := model3d.NewMesh()
+	prevSideLength := 0.0
 	for zIdx, layerVolume := range layerVolumes {
 		z := float64(zIdx) * layerHeight
 		s := sideForVolume(layerVolume)
-		mesh.AddMesh(model3d.NewMeshRect(
-			model3d.XYZ(-s/2, -s/2, z),
-			model3d.XYZ(s/2, s/2, z+layerHeight),
-		))
+
+		min := model3d.XYZ(-s/2, -s/2, z)
+		max := model3d.XYZ(s/2, s/2, z+layerHeight)
+		sides := model3d.NewMeshRect(min, max)
+		sides.Iterate(func(t *model3d.Triangle) {
+			if math.Abs(t.Normal().Z) < 0.9 {
+				mesh.Add(t)
+			}
+		})
+
+		// Triangulate bottom from previous rect.
+		if prevSideLength == 0 {
+			// Add the bottom face directly.
+			mesh.AddQuad(
+				model3d.XYZ(min.X, min.Y, min.Z),
+				model3d.XYZ(min.X, max.Y, min.Z),
+				model3d.XYZ(max.X, max.Y, min.Z),
+				model3d.XYZ(max.X, min.Y, min.Z),
+			)
+		} else if prevSideLength != s {
+			// Add the interface between the last block and this one.
+			smallerS := math.Min(prevSideLength, s)
+			largerS := math.Max(prevSideLength, s)
+
+			subMesh := model3d.NewMesh()
+			subMesh.AddQuad(
+				model3d.XYZ(-largerS/2, largerS/2, z),
+				model3d.XYZ(largerS/2, largerS/2, z),
+				model3d.XYZ(smallerS/2, smallerS/2, z),
+				model3d.XYZ(-smallerS/2, smallerS/2, z),
+			)
+			subMesh.AddQuad(
+				model3d.XYZ(-smallerS/2, -smallerS/2, z),
+				model3d.XYZ(smallerS/2, -smallerS/2, z),
+				model3d.XYZ(largerS/2, -largerS/2, z),
+				model3d.XYZ(-largerS/2, -largerS/2, z),
+			)
+			subMesh.AddQuad(
+				model3d.XYZ(-largerS/2, -largerS/2, z),
+				model3d.XYZ(-largerS/2, largerS/2, z),
+				model3d.XYZ(-smallerS/2, smallerS/2, z),
+				model3d.XYZ(-smallerS/2, -smallerS/2, z),
+			)
+			subMesh.AddQuad(
+				model3d.XYZ(smallerS/2, -smallerS/2, z),
+				model3d.XYZ(smallerS/2, smallerS/2, z),
+				model3d.XYZ(largerS/2, largerS/2, z),
+				model3d.XYZ(largerS/2, -largerS/2, z),
+			)
+
+			if prevSideLength > s {
+				subMesh = subMesh.InvertNormals()
+			}
+
+			mesh.AddMesh(subMesh)
+		}
+
+		prevSideLength = s
 	}
+
+	// Add the top face -- we should check the orientation.
+	z := float64(len(layerVolumes)) * layerHeight
+	s := prevSideLength
+	mesh.AddQuad(
+		model3d.XYZ(s/2, -s/2, z),
+		model3d.XYZ(s/2, s/2, z),
+		model3d.XYZ(-s/2, s/2, z),
+		model3d.XYZ(-s/2, -s/2, z),
+	)
+
+	var n int
+	_, n = mesh.RepairNormals(1e-8)
+	fmt.Println("repaired", n, "normals")
+
 	log.Println("exporting STL...")
 	mesh.SaveGroupedSTL(outputPath)
 }

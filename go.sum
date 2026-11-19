@@ -4,5 +4,7 @@ github.com/unixpickle/essentials v1.3.0 h1:H258Z5Uo1pVzFjxD2rwFWzHPN3s0J0jLs5kux
 github.com/unixpickle/essentials v1.3.0/go.mod h1:dQ1idvqrgrDgub3mfckQm7osVPzT3u9rB6NK/LEhmtQ=
 github.com/unixpickle/model3d v0.4.22 h1:o+JxJQOLecomrSvu2uh8t4HJBw4u2JrEfKvE6VFR1I8=
 github.com/unixpickle/model3d v0.4.22/go.mod h1:bk9rFuX4Lc0Bii9rVzfTd/+E/eKJnqe21QZfhcxUGsM=
+github.com/unixpickle/model3d v0.4.23 h1:+UDPsSo+BChLZ+V8ZwViqMoXasLgEPExpC+B5MwML60=
+github.com/unixpickle/model3d v0.4.23/go.mod h1:bk9rFuX4Lc0Bii9rVzfTd/+E/eKJnqe21QZfhcxUGsM=
 github.com/unixpickle/splaytree v1.2.0 h1:GCXr7opRXvTfMCIONcx3z4ST66LIe13bNGWaDCeTq+c=
 github.com/unixpickle/splaytree v1.2.0/go.mod h1:Wmzeu7zl1qJVgZXlOdWib73pZlFOsFVgYo3k/72bYDw=
